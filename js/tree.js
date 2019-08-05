@@ -8,8 +8,9 @@
     const pinSize = 26, // width and height of map pins
         defaultRadius = 175; // default city radius in pixels
     
-    var mileToPixelRatio = 0; // how many pixels are in a mile
-    const EARTH_RADIUS = 3958.8; //radius of earth in miles
+    var kmToPixelRatio = 0; // how many pixels are in a Km
+    // const EARTH_RADIUS = 3958.8; //radius of earth in miles
+    const EARTH_RADIUS = 6371; //radius of earth in Km
     
     const colorA = "#62bce3",
         colorB = "#f58b56";
@@ -27,6 +28,7 @@
     const INTERSECTION_FILTER = 2;
     const CATEGORY_FILTER = 4;
     const SITES_FILTER = 3;
+    const PLOTSITES_FILTER = 2;
     
     filters[INTERSECTION_FILTER].cityA = projection.invert([200 + (pinSize / 2), 375 + (pinSize / 2)]);
     filters[INTERSECTION_FILTER].cityAradius = defaultRadius;
@@ -46,8 +48,8 @@
         var pixelDistance = Math.sqrt(Math.pow(pixelX, 2) + Math.pow(pixelY, 2));
     
         // coords array are [lon, lat] while distance functions takes lat then long
-        var mileDistance = d3.geo.distance(coords1, coords2) * EARTH_RADIUS;
-        return (pixelDistance / mileDistance);
+        var kmDistance = d3.geo.distance(coords1, coords2) * EARTH_RADIUS;
+        return (pixelDistance / kmDistance);
     }
     
     // Load data, setup controls
@@ -71,7 +73,7 @@
         console.log(pixel1);
         console.log(pixel2);
     
-        mileToPixelRatio = calculateMPR(pixel1, pixel2);
+        kmToPixelRatio = calculateMPR(pixel1, pixel2);
         drawCityPins(200, 375, 450, 375, data); //default pin locations
         setUpControls(data);
     });
@@ -250,6 +252,25 @@
             });
         });
 
+        $('#plotButton').click(function(event) {
+            $('#drop2').click( function(event) {
+                event.preventDefault();
+                var text = event.target.text;
+                // console.log('test filter cate', event.target.text);
+
+                if(text) {
+                    if(text === "All PlotSite") {
+                        filters[PLOTSITES_FILTER].PlotSize= null;
+                        $('#plotButton').text("Select plotsize: All PlotSite");
+                    } else {
+                        filters[PLOTSITES_FILTER].PlotSize = text;
+                        $('#plotButton').text("Select plotsize: " + text);
+                    }
+                    update(filterTrees(crimes));
+                }
+            });
+        });
+
         // Initialize sliders
         var sliderA = $("#sliderA"),
             sliderB = $("#sliderB");
@@ -257,7 +278,7 @@
         // Make sliders slide and control radii of cities
         sliderA.slider();
         sliderA.on("slide", function(slideEvt) {
-            $("#sliderAVal")[0].innerHTML = Math.round((slideEvt.value / mileToPixelRatio) * 10) / 10; //display radius in miles
+            $("#sliderAVal")[0].innerHTML = Math.round((slideEvt.value / kmToPixelRatio) * 10) / 10; //display radius in km
             d3.select("#radiusA")
                 .attr("rx", slideEvt.value)
                 .attr("ry", slideEvt.value);
@@ -267,7 +288,7 @@
     
         sliderB.slider();
         sliderB.on("slide", function(slideEvt) {
-            $("#sliderBVal").text(Math.round((slideEvt.value / mileToPixelRatio) * 10) / 10); //display radius in miles
+            $("#sliderBVal").text(Math.round((slideEvt.value / kmToPixelRatio) * 10) / 10); //display radius in km
             d3.select("#radiusB")
                 .attr("rx", slideEvt.value)
                 .attr("ry", slideEvt.value);
@@ -315,6 +336,12 @@
 
             if(filters[SITES_FILTER].sites) {
             	if(filters[SITES_FILTER].sites !== value.sites) {
+            		return false;
+            	}
+            }
+
+            if(filters[PLOTSITES_FILTER].PlotSize) {
+            	if(filters[PLOTSITES_FILTER].PlotSize !== value.PlotSize) {
             		return false;
             	}
             }
