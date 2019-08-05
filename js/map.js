@@ -20,4 +20,4 @@ var svg = d3.select("#map-container").append("svg")
 svg.append("image")
 	.attr("width", width)
 	.attr("height", height)
-	.attr("xlink:href", "map2.svg");
+	.attr("xlink:href", "sf-map.svg");

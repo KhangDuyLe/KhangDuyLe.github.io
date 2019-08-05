@@ -11,8 +11,8 @@
     var mileToPixelRatio = 0; // how many pixels are in a mile
     const EARTH_RADIUS = 3958.8; //radius of earth in miles
     
-    const colorA = "#7BCC70",
-        colorB = "#72587F";
+    const colorA = "#62bce3",
+        colorB = "#f58b56";
     
     // Define the div for the tooltip
      var div = d3.select("body").append("div")
@@ -23,11 +23,10 @@
     var filters = [[],{},{},{},{}];
     
     // Indexes of Different Filters
-    const WEEKDAY_FILTER = 0;
-    const DATERANGE_FILTER = 1;
+   
     const INTERSECTION_FILTER = 2;
-    const TIME_FILTER = 3;
     const CATEGORY_FILTER = 4;
+    const SITES_FILTER = 3;
     
     filters[INTERSECTION_FILTER].cityA = projection.invert([200 + (pinSize / 2), 375 + (pinSize / 2)]);
     filters[INTERSECTION_FILTER].cityAradius = defaultRadius;
@@ -61,13 +60,14 @@
     // });
     
     
-    d3.csv("trees.csv", function(data) {
+    d3.csv("trees_2.csv", function(data) {
     
         console.log(data);
         pixel1 = new Array(data[1].Longitude,data[1].Latitude);
         end = Math.round(data.length/2);
         pixel2 = new Array(data[end].Longitude, data[end].Latitude);
-    
+        console.log('Prior data');
+
         console.log(pixel1);
         console.log(pixel2);
     
@@ -83,7 +83,7 @@
     
     
     // Draw the city pins and make them draggable!
-    function drawCityPins(Ax, Ay, Bx, By, crimes) {
+    function drawCityPins(Ax, Ay, Bx, By, data) {
     
         var drag = d3.behavior.drag()
             .on("drag", function() {
@@ -110,10 +110,10 @@
                     .attr("cx", Math.max(parseInt(dragged.attr("x")) + radius, Math.min(svgWidth - radius, d3.event.x)))
                     .attr("cy", Math.max(parseInt(dragged.attr("y")) + radius, Math.min(svgHeight - radius, d3.event.y)));
     
-                update(filterCrimes(crimes));
+                update(filterTrees(data));
             })
             .on("dragend", function() {
-                update(filterCrimes(crimes));
+                update(filterTrees(data));
             });
     
         // Draw radius around pin A
@@ -168,32 +168,6 @@
     
     function setUpControls(crimes) {
     
-        // Handle Weekday Checkbox Settings
-        // $("#weekdayfilter :input").change(function() {
-        // 	var day = this.value;
-        // 	if (this.checked) {
-        // 		var i = filters[WEEKDAY_FILTER].indexOf(day);
-        // 		if(i != -1) {
-        // 			filters[WEEKDAY_FILTER].splice(i, 1);
-        // 		}
-        // 	} else {
-        // 		filters[WEEKDAY_FILTER].push(day);
-        // 	}
-        // 	update(filterCrimes(crimes));
-        // });
-    
-        // Display Date Picker
-        // setUpDatePicker(crimes);
-    
-        // $('.input-daterange').datepicker().on("changeDate", function(e) {
-        // 	filters[DATERANGE_FILTER].min = new Date($("#datepickermin")[0].value);
-        // 	var tempmax = new Date($("#datepickermax")[0].value);
-        // 	tempmax.setDate(tempmax.getDate()+1);
-        // 	filters[DATERANGE_FILTER].max = tempmax;
-        // 	update(filterCrimes(crimes));
-        // });
-    
-    
         // Handle Intersection Data
         var cityA = d3.select("#radiusA"),
             cityB = d3.select("#radiusB");
@@ -219,44 +193,63 @@
             .css("background-image", "none");
     
     
-        // Handle Time of Day Slider
-        // $("#time-slider").slider({
-        // 	formatter: function(value) {
-        // 		// Update tooltip
-        // 		return getConvertedTime(value[0]) + " to " + getConvertedTime(value[1]);
-        // 	}
-        // }).on("slide", function(event) {
-        // 	$("#timerangelabel")[0].innerHTML = getConvertedTime(event.value[0]) + " to " + getConvertedTime(event.value[1]);
-        // 	filters[TIME_FILTER].min = event.value[0];
-        // 	filters[TIME_FILTER].max = event.value[1];
-        // 	update(filterCrimes(crimes));
+        // // Handle Crime Categories
+        // $('.dropdown-menu').on("click", function(event) {
+        //     event.preventDefault();
+        //     var text = event.target.text;
+        //     if(text) {
+        //         if(text === "All Species") {
+        //             filters[CATEGORY_FILTER].species= null;
+        //             $('#categoryButton').text("Select Category: All Species");
+        //         } else {
+        //             filters[CATEGORY_FILTER].species = text.toUpperCase();
+        //             $('#categoryButton').text("Select Category: " + text);
+        //         }
+                
+        //         update(filterTrees(crimes));
+        //     }
         // });
-        // $("#sliderTime .slider-handle")
-        // 	.css("width", "5px")
-        // 	.css("margin-left", "-2px")
-        // 	.css("background-color", "#666")
-        // 	.css("background-image", "none");
-        // $("#sliderTime .slider-selection")
-        // 	.css("background-color", "#ccc")
-        // 	.css("background-image", "none");
-    
-    
+        console.log('Prior test filter cate');
+
         // Handle Crime Categories
-        $('.dropdown-menu').on("click", function(event) {
-            event.preventDefault();
-            var text = event.target.text;
-            if(text) {
-                if(text === "All Crimes") {
-                    filters[CATEGORY_FILTER].category = null;
-                    $('#categoryButton').text("Select Category: All Crimes");
-                } else {
-                    filters[CATEGORY_FILTER].category = text.toUpperCase();
-                    $('#categoryButton').text("Select Category: " + text);
+        $('#categoryButton').click(function(event) {
+            $('#drop').click( function(event) {
+                event.preventDefault();
+                var text = event.target.text;
+                console.log('test filter cate', event.target.text);
+
+                if(text) {
+                    if(text === "All Species") {
+                        filters[CATEGORY_FILTER].species= null;
+                        $('#categoryButton').text("Select Category: All Species");
+                    } else {
+                        filters[CATEGORY_FILTER].species = text;
+                        $('#categoryButton').text("Select Category: " + text);
+                    }
+                    update(filterTrees(crimes));
                 }
-                update(filterCrimes(crimes));
-            }
+            });
         });
-    
+
+        $('#siteButton').click(function(event) {
+            $('#drop1').click( function(event) {
+                event.preventDefault();
+                var text = event.target.text;
+                console.log('test filter cate', event.target.text);
+
+                if(text) {
+                    if(text === "All Sites") {
+                        filters[SITES_FILTER].sites= null;
+                        $('#siteButton').text("Select Site: All Sites");
+                    } else {
+                        filters[SITES_FILTER].sites = text;
+                        $('#siteButton').text("Select Site: " + text);
+                    }
+                    update(filterTrees(crimes));
+                }
+            });
+        });
+
         // Initialize sliders
         var sliderA = $("#sliderA"),
             sliderB = $("#sliderB");
@@ -269,7 +262,7 @@
                 .attr("rx", slideEvt.value)
                 .attr("ry", slideEvt.value);
             filters[INTERSECTION_FILTER].cityAradius = slideEvt.value;
-            update(filterCrimes(crimes));
+            update(filterTrees(crimes));
         });
     
         sliderB.slider();
@@ -279,7 +272,7 @@
                 .attr("rx", slideEvt.value)
                 .attr("ry", slideEvt.value);
             filters[INTERSECTION_FILTER].cityBradius = slideEvt.value;
-            update(filterCrimes(crimes));
+            update(filterTrees(crimes));
         });
     
         $("#Aknob .slider-handle")
@@ -297,88 +290,34 @@
             .css("background-image", "none");
     
         //Initialize visual
-        update(filterCrimes(crimes));
+        update(filterTrees(crimes));
     }
-    
-    function getConvertedTime(value) {
-        var convertedtime;
-        if(value === 0) {
-            convertedtime = "12:00 AM";
-        } else if(value < 12) {
-            convertedtime = value + ":00 AM";
-        } else if(value === 12) {
-            convertedtime = "12:00 PM";
-        } else if(value === 24) {
-            convertedtime = "11:59 PM";
-        } else {
-            convertedtime = value%12 + ":00 PM";
-        }
-        return convertedtime;
-    }
-    
-    
-    function setUpDatePicker(crimes) {
-        var maxdate = new Date(d3.max(crimes, function(d) { return d.Date;} ));
-        var mindate = new Date(d3.min(crimes, function(d) { return d.Date;} ));
-        maxdate.setDate(maxdate.getDate()+2);
-        mindate.setDate(mindate.getDate()+1);
-        filters[DATERANGE_FILTER].min = mindate;
-        filters[DATERANGE_FILTER].max = maxdate;
-    
-        // Set up Date Range selector
-        var datepicker = $('.input-daterange').datepicker({
-            startDate: mindate,
-            endDate: maxdate,
-            defaultViewDate: { year: mindate.getFullYear(), month: mindate.getMonth(), day: mindate.getDate() },
-            autoclose: true,
-            todayHighlight: true,
-        });
-    }
-    
+  
     
     // Filters crimes based on Weekday, Date range, and intersection
-    function filterCrimes(crimes) {
+    function filterTrees(crimes) {
         var curr_crimes = crimes.filter(function(value) {
-            console.log('filte',value);
-            // //Filter Days of Week
-            // for(var i = 0; i < filters[WEEKDAY_FILTER].length; i++) {
-            // 	if(value.DayOfWeek === filters[WEEKDAY_FILTER][i]) {
-            // 		return false;
-            // 	}
-            // }
-    
-            // //Filter Date Range
-            // if(filters[DATERANGE_FILTER].min) {
-            // 	var val_date = new Date(value.Date);
-            // 	val_date.setDate(val_date.getDate()+1);
-            // 	if(val_date < filters[DATERANGE_FILTER].min || val_date >= filters[DATERANGE_FILTER].max) {
-            // 		return false;
-            // 	}
-            // }
-    
-            // //Filter Time of Day
-            // if(filters[TIME_FILTER].min || filters[TIME_FILTER].max) {
-            // 	var val_hour = parseInt(value.Time.slice(0,2));
-            // 	var val_min = parseInt(value.Time.slice(3));
-            // 	if(val_hour < filters[TIME_FILTER].min || val_hour > filters[TIME_FILTER].max) {
-            // 		return false;
-            // 	} else if(val_hour == filters[TIME_FILTER].max && val_min > 0) {
-            // 		return false;
-            // 	}
-            // }
-    
+            // console.log('filte',value);
+         
             //Filter Intersection
             if(!checkInRadius(value, filters[INTERSECTION_FILTER].cityA, filters[INTERSECTION_FILTER].cityAradius) ||
                 !checkInRadius(value, filters[INTERSECTION_FILTER].cityB, filters[INTERSECTION_FILTER].cityBradius)) {
                     return false;
                 }
-    
-            //Filter Crime Category
-            // if(filters[CATEGORY_FILTER].category) {
-            // 	if(filters[CATEGORY_FILTER].category !== value.Category) {
-            // 		return false;
-            // 	}
-            // }
+            console.log('filters[CATEGORY_FILTER].species',filters[CATEGORY_FILTER].species);
+            // Filter species Category
+            if(filters[CATEGORY_FILTER].species) {
+                console.log('check species',filters[CATEGORY_FILTER].species,value.species);
+            	if(filters[CATEGORY_FILTER].species !== value.species) {
+            		return false;
+            	}
+            }
+
+            if(filters[SITES_FILTER].sites) {
+            	if(filters[SITES_FILTER].sites !== value.sites) {
+            		return false;
+            	}
+            }
     
             return true;
     
@@ -400,7 +339,7 @@
         var incidentCoor = projection(pixel);
         var pointCoor = projection(point);
         var distance = getDistance(incidentCoor, pointCoor);
-        console.log('checkInRadius',pixel,incidentCoor,distance, radius);
+        // console.log('checkInRadius',pixel,incidentCoor,distance, radius);
     
         return distance <= radius;
     }
